@@ -1,13 +1,4 @@
 <?php
-/*
-function db_connect() {
-   $result = new mysqli('localhost', 'bm_user', 'password', 'bookmarks');
-   if (!$result) {
-     throw new Exception('Could not connect to database server');
-   } else {
-     return $result;
-   }
-}*/
 
 if (empty($db)) {
 	function dbquery($strSQL) {
@@ -42,14 +33,24 @@ if (empty($db)) {
 		}
 	}
 	//$db = mysql_connect('localhost','root','Kiran5july');
-	//mysql_select_db('pmi281', $db);
-	$db = new mysqli('localhost', 'km', 'Asdf@1234', 'mycompany');
-
+	//mysql_select_db('mycompany', $db);
+	$db = new mysqli('localhost', 'km', 'km@1234', 'mycompany');
+	//if (!$db) {
 	if (mysqli_connect_errno()) {
 		echo "<p><font color='red'><b>Error:<b> Could not connect to database.  Please try again later.</font></p>";
+		throw new Exception('Could not connect to database. Check server & network.');
 		exit;
 	}
 
 }
 
+/*
+function db_connect() {
+   $result = new mysqli('localhost', 'km', 'km@1234', 'mycompany');
+   if (!$result) {
+     throw new Exception('Could not connect to database server');
+   } else {
+     return $result;
+   }
+}*/
 ?>

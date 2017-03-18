@@ -5,4 +5,4 @@ use mycompany;
 
 grant select, insert, update, delete
 on mycompany.*
-to km@localhost identified by 'Asdf@1234';
+to km@localhost identified by 'km@1234';
