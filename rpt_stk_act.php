@@ -15,14 +15,16 @@
   	echo "Your session timed out. Please <a href=\"login.php\" target=\"main\">click here to login</a> again.";
   }else{
 
+  	//km_disp_post_data($_POST);
+  	
   	//initialize variables
   	//$sId = $_POST['sId'];
-  	$sEmpId = isset($_POST['sEmpId'])?$_POST['sEmpId']:"";
   	$sEmpName = isset($_POST['sEmpName'])?$_POST['sEmpName']:"";
-  	$sProdId = isset($_POST['sProdId0'])?$_POST['sProdId0']:"";
+  	$sEmpId = ($sEmpName) ? (isset($_POST['sEmpId'])?$_POST['sEmpId']:"") : "";
   	$sProdName = isset($_POST['sProdName0'])?$_POST['sProdName0']:"";
+  	$sProdId = ($sProdName) ? (isset($_POST['sProdId0'])?$_POST['sProdId0']:"") : "";
   	$sWHCode = isset($_POST['sWHCode0'])?$_POST['sWHCode0']:"";
-  	$sWHId = isset($_POST['sWHId0'])?$_POST['sWHId0']:"";
+  	$sWHId = ($sWHCode) ? (isset($_POST['sWHId0'])?$_POST['sWHId0']:"") : "";
   	$dtStart = isset($_POST['dtStart'])?$_POST['dtStart']:"";
   	$dtEnd = isset($_POST['dtEnd'])?$_POST['dtEnd']:"";
   	$sGrpBy = $_POST['sGrpBy'];
@@ -48,9 +50,9 @@
 	
   	//Add filter section
     echo "<h3>Filter Criteria</h3>";
-    echo "<table><tr><th>Employee Name:</th><td>".(($sEmpName)?$sEmpName:"--ALL--</td></tr>").
-				"<tr><th>Product Name:</th><td>".(($sProdName)?$sProdName:"--ALL--</td></tr>").
-				"<tr><th>Warehouse Code:</th><td>".(($sWHCode)?$sWHCode:"--ALL--</td></tr>").
+    echo "<table><tr><th>Employee Name:</th><td>".(($sEmpName) ? $sEmpName :"--ALL--</td></tr>").
+				"<tr><th>Product Name:</th><td>".(($sProdName) ? $sProdName :"--ALL--</td></tr>").
+				"<tr><th>Warehouse Code:</th><td>".(($sWHCode) ? $sWHCode :"--ALL--</td></tr>").
 				"<tr><th>Activity:</th><td>".$sOp."</td></tr>".
 				"<tr><th>Groups:</th><td>".$sGrpBy.(($sGrpBy2)?"/".$sGrpBy2:"")."</td></tr>".
       			"<tr><th>Date Range:</th><td>From:".(($dtStart)?$dtStart:"--System Launch--")."<br>To:".(($dtEnd)?$dtEnd:date("Y-m-d H:i:s"))."</td></tr>".
@@ -104,11 +106,11 @@
  								left outer join T_EMP e on e.ID=invdt.OP_EMP_ID
 								left outer join T_WAREHOUSE wh on wh.ID=invt.WH_ID
  								where 1=1 ".$sOpFilter.
-			 								(($sEmpId) ? " and invdt.OP_EMP_ID=".$sEmpId : "").
-			 								((strlen($sProdId)>1) ? " and invt.PROD_ID=".$sProdId : "").
-			 								((strlen($sWHId)>1) ? " and invt.WH_ID=".$sWHId : "").
-			 								((strlen($dtStart)>1) ? " and STR_TO_DATE(invdt.OP_DT,'%Y-%m-%d') >= STR_TO_DATE('".$dtStart."','%Y-%m-%d')" : "").
-			 								((strlen($dtEnd)>1) ? " and STR_TO_DATE(invdt.OP_DT,'%Y-%m-%d') <= STR_TO_DATE('".$dtEnd."','%Y-%m-%d')" : "").
+			 								(($sEmpName && $sEmpId) ? " and invdt.OP_EMP_ID=".$sEmpId : "").
+			 								((strlen($sProdId)>0) ? " and invt.PROD_ID=".$sProdId : "").
+			 								((strlen($sWHId)>0) ? " and invt.WH_ID=".$sWHId : "").
+			 								((strlen($dtStart)>9) ? " and STR_TO_DATE(invdt.OP_DT,'%Y-%m-%d') >= STR_TO_DATE('".$dtStart."','%Y-%m-%d')" : "").
+			 								((strlen($dtEnd)>9) ? " and STR_TO_DATE(invdt.OP_DT,'%Y-%m-%d') <= STR_TO_DATE('".$dtEnd."','%Y-%m-%d')" : "").
 			 								" order by ". $sGrpByCols.", invdt.OP_DT";
 			//echo "My Query: ".$sQuery;
  			$result = dbquery($sQuery);

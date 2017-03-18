@@ -126,34 +126,44 @@
 			//echo 'User: '.$sUserName." (".$suserId.") Input Data: '".$sUserName."', '".$passwd."', '".$email."','".$secretq."','".$secreta."'<br>";
 			if(!$sUserId && $sUserName != "")
 			{
-				$result = dbquery("select * from T_USER where username='".$sUserName."'");
-				if (!$result) {
+				$stmt = $db->prepare("select * from T_USER where username=?");
+				$stmt->bind_param("s", $sUserName);
+					
+				if (!$stmt->execute()) {
 					throw new Exception('Could not execute query');
 				}
-				if ($result->num_rows>0) {
+				if ($stmt->get_result()->num_rows>0) {
 					echo "<p class='excepmsg'>That username is taken - Please choose another one.</p>";
 					throw new Exception("That username is taken - Please choose another one.");
 				}else{
 					// Get the User Type id
 					//echo "select ID from T_USR_TYPE where USR_TYPE='".$sUsrType."'";
-					$result = dbquery("select ID from T_USR_TYPE where USR_TYPE='".$sUsrType."'");
-					
-					if (!$result) {
+					//$result = dbquery("select ID from T_USR_TYPE where USR_TYPE='".$sUsrType."'");
+					$stmt = $db->prepare("select ID from T_USR_TYPE where USR_TYPE=?");
+					$stmt->bind_param("s", $sUsrType);
+						
+					if (!$stmt->execute()) {
+					//if (!$result) {
 						echo "<p class='excepmsg'>KMDB Exception: User Type Query failed, please try again.</p>";
+						//echo "SQL:".$result;
 						throw new Exception("User Type Query failed, please try again.");
 					}else{
 					
-						$rowcount=mysqli_num_rows($result);
+						$rowcount=$stmt->get_result()->num_rows; //mysqli_num_rows($result);
 						//if record exist, add the quantity to it
 						if($rowcount >= 1)
 						{
 							$row=mysqli_fetch_row($result);
 							$sUsrTypeId = $row[0];
 							
-							$result = $db->query("insert into T_USER (USERNAME, USR_TYPE_ID, PASSWD, EMAIL, SECRETQ, SECRETA) values
-		                         ('".$sUserName."', $sUsrTypeId, '".sha1($passwd)."', '".$email."','".$secretq."','".$secreta."')");
-							if (!$result) {
-								echo "<p class='excepmsg'>KMDB Exception: User record creation failed, please try again.<br>".$db->error."</p>";
+							//$result = $db->query("insert into T_USER (USERNAME, USR_TYPE_ID, PASSWD, EMAIL, SECRETQ, SECRETA) values
+		                    //     ('".$sUserName."', $sUsrTypeId, '".sha1($passwd)."', '".$email."','".$secretq."','".$secreta."')");
+							$stmt = $db->prepare("insert into T_USER (USERNAME, USR_TYPE_ID, PASSWD, EMAIL, SECRETQ, SECRETA) values (?,?,?,?,?,?)");
+							$stmt->bind_param("sissss",$sUserName, $sUsrTypeId, sha1($passwd), $email, $secretq, $secreta);
+							
+							if (!$stmt->execute()) {
+								echo "<p class='excepmsg'>KMDB Exception: User record creation failed, please try again.<br>".$stmt->error."</p>";
+								//echo "SQL:".$result;
 								throw new Exception("Exception during creating User account");
 							}else{
 								$sUserId = $db->insert_id;
@@ -173,7 +183,11 @@
 			{
 				$result = $db->query("insert into T_ADDR (ADDR1, ADDR2, CITY, STATE, COUNTRY, ZIP_CODE) values
 		                         ('".$sAddr1."', '".$sAddr2."', '".$sCity."','".$sState."','".$sCountry."','".$sZip."')");
-				if (!$result) {
+				$stmt = $db->prepare("insert into T_ADDR (ADDR1, ADDR2, CITY, STATE, COUNTRY, ZIP_CODE) values (?,?,?,?,?,?)");
+				$stmt->bind_param("ssssss", $sAddr1, $sAddr2, $sCity, $sState, $sCountry, $sZip);
+					
+				if (!$stmt->execute()) {
+				//if (!$result) {
 					echo "<p class='excepmsg'>Exception during inserting Address record.</p>";
 					throw new Exception('Exception during inserting Address record.');
 				}
@@ -183,10 +197,14 @@
 			
 			
 			//echo "Employee Input: '".$sEmpCode."','".$sFirstName."','".$sLastName."','".$sUserId."','".$sDeptId."','".$sAddrId."'<br>";
-			$result = $db->query("insert into T_EMP (EMP_CODE, FIRST_NAME, LAST_NAME, USER_ID, DEPT_ID, ADDR_ID) values 
-                         	('".$sEmpCode."','".$sFirstName."','".$sLastName."','".$sUserId."','".$sDeptId."','".$sAddrId."')");
-			if (!$result) {
-				echo "<p class='excepmsg'>Exception during inserting Employee record.".$db->error."</p>";
+			//$result = $db->query("insert into T_EMP (EMP_CODE, FIRST_NAME, LAST_NAME, USER_ID, DEPT_ID, ADDR_ID) values 
+            //             	('".$sEmpCode."','".$sFirstName."','".$sLastName."',".$sUserId.",'".$sDeptId."','".$sAddrId."')");
+			$stmt = $db->prepare("insert into T_EMP (EMP_CODE, FIRST_NAME, LAST_NAME, USER_ID, DEPT_ID, ADDR_ID) values (?,?,?,?,?,?)");
+			$stmt->bind_param("sssiii", $sEmpCode, $sFirstName, $sLastName, $sUserId, $sDeptId, $sAddrId);
+			
+			if (!$stmt->execute()) {
+				echo "<p class='excepmsg'>Exception during inserting Employee record.".$stmt->error."</p>";
+				//echo "SQL:".$result;
 				throw new Exception('Exception during inserting Employee record.');
 			}
 			$sId = $db->insert_id;

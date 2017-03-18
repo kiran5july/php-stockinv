@@ -61,20 +61,12 @@
 		try{
   		// if ok, put in db
 			$db->autocommit(false);
-			$sQuery = "insert into T_MANUFACTURER (NAME, ADDR_ID) values 
-                         	('".$sName."','".$sAddrId."')";
-			//echo "SQL= ".$sQuery;
-  			$result = dbinsert($sQuery);
-  		
-  			if (!$result) {
-					echo "<p class='excepmsg'>Exception during creating Manufacturer master record.<br>".$db->error."</p>";
-					throw new Exception('KMDB Exception: Exception during creating Manufacturer master record.');
-	  		}
-  			$sId = $result;
-  			if(!$sAddrId && $sAddr1 != "")
+  			
+  			if($sAddrId != "" && $sAddr1 != "")
   			{
-  				$result = $db->query("insert into T_ADDR (ADDR1, ADDR2, CITY, STATE, COUNTRY, ZIP_CODE) values
-		                         ('".$sAddr1."', '".$sAddr2."', '".$sCity."','".$sState."','".$sCountry."','".$sZip."')");
+  				$stmt = $db->prepare("insert into T_ADDR (ADDR1, ADDR2, CITY, STATE, COUNTRY, ZIP_CODE) values (?,?,?,?,?,?)");
+		        $stmt->bind_param("ssssss", $sAddr1, $sAddr2, $sCity, $sState, $sCountry, $sZip);
+		        $result = $stmt->execute();
   				if (!$result) {
   					echo "<p class='excepmsg'>Exception during inserting Address record.</p>";
   					throw new Exception('Exception during inserting Address record.');
@@ -82,6 +74,16 @@
   				$sAddrId = $db->insert_id;
   			
   			}//end address
+  			$stmt = $db->prepare("insert into T_MANUFACTURER (NAME, ADDR_ID) values (?,?)");
+  			$stmt->bind_param("si",$sName, $sAddrId);
+  			$result = $stmt->execute();
+  				
+  			if (!$result) {
+  				echo "<p class='excepmsg'>Exception during creating Manufacturer master record.<br>".$stmt->error."</p>";
+  				throw new Exception('KMDB Exception: Exception during creating Manufacturer master record.');
+  			}
+  			$sId = $db->insert_id;
+  				
   			$db->commit();
   			echo "<p class='successmsg'>Success!<br>*".$sName."</p>";
 

@@ -193,7 +193,7 @@
     		<input type="button" value="..." onclick="JavaScript:pickWarehouse(sProdId0.value,'1')"></td></tr>
 
     <tr>
-    	<td>Given Date:</td>
+    	<td>Move Date:</td>
     	<td><input type="text" id="dtAdded" name="dtAdded" size="16" maxlength="19" value="<?=$dtAdded?>" readonly/>
     			<a href="javascript:NewCal('dtAdded','YYYYMMDD',true,24)"><img src="images/cal.gif" width="16" height="16" border="1" alt="Pick a datetime"></a></td></tr>
     <tr>  

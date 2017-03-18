@@ -23,9 +23,14 @@
   	$iQty = "";
   	$sWHCode = "";
   	$sComments = "";
+  	$bOpSuccess = false;
+  	$colId = "";
   	//Check if form submitted
-  	If(isset($_POST["btnSubmit"])) {
+  	If(isset($_POST["btnSubmit"])) 
+  	{
   	  
+  	//km_disp_post_data($_POST);
+  		
   	//create short variable names
   	$sId = $_POST['sId'];
   	$sEmpId = $_POST['sEmpId'];
@@ -38,7 +43,7 @@
   	$iQty = $_POST['iQty'];
   	$sComments = $_POST['sComments'];
   	$iGenId = "";
-
+  	$sInvOp ="IN-EMP";
     // check forms filled in
 	if (strlen($sEmpId) < 1) {
     	echo "<p class=\"inputerror\">Warning! Invalid fields -Employee. Try again.</p>";
@@ -54,89 +59,123 @@
 	else{
 
 		
-		try{
+		try
+		{
 			
-		$db->autocommit(false);
-			//Check if the product has PR-WH mapping record
-		$result = dbquery("select ID from T_INVT where PROD_ID=".$sProdId." and WH_ID=".$sWHId);
-		
-		
-		if (!$result) {
-			echo "<p class='excepmsg'>KMDB Exception: Inventory Query failed, please try again.</p>";
-		}else{
-
-			$rowcount=mysqli_num_rows($result);
-			//if Inventory/WH record exist, add the quantity to it
-			if($rowcount >= 1)
-			{
-				$row=mysqli_fetch_row($result);
-				$sInvId = $row[0];
-					
-				$result = $db->query("update T_INVT set QTY = QTY+".$iQty." where ID=".$sInvId);
-				if (!$result){
-					echo "<p class='excepmsg'>KMDB Exception: Inventory Master record update failed.</p>";
-					throw new Exception("KMDB Exception: Inventory Master record update failed.");
-				}
-			}//end rowcount of T_INVENTORY
-			else //if no record, create new record for it
-			{
-				$result = $db->query("insert into T_INVT (PROD_ID, WH_ID, QTY) values
-                         		('".$sProdId."','".$sWHId."',".$iQty.")");
-				if (!$result){
-					echo "<p class='excepmsg'>KMDB Exception: Inventory Master record insert failed.</p>";
-					throw new Exception("KMDB Exception: Inventory Master record insert failed.");
-				}
-				$sInvId = $db->insert_id;
-			}//else Inv(Prod/WH)
+			$db->autocommit(false);
+				//Check if the product has PR-WH mapping record
+			$stmt = $db->prepare("select ID from T_INVT where PROD_ID=? and WH_ID=?");
+			$stmt->bind_param("ii", $sProdId, $sWHId);
+			//echo "T_INVT Query with PROD_ID=".$sProdId." and WH_ID=".$sWHId."<br>";
 			
-			//Insert Inventory detail record for this txn
-			$result = $db->query("insert into T_INVT_DTL (INVT_ID, OP_DT, QTY, OPERATION, OP_EMP_ID) values
-	                         	('".$sInvId."','".$dtGiven."',".$iQty.", 'IN-EMP', ".$sEmpId.")");
-			if (!$result){
-				echo "<p class='excepmsg'>KMDB Exception: Inventory Detail record insert failed.</p>";
-				throw new Exception("KMDB Exception: Inventory Detail record insert failed.");
-			}
-			$idInvDtl = $db->insert_id;
-			
-			//insert prod-emp entry
-			$result = $db->query("insert into T_PROD_FROM_EMP (EMP_ID, INVT_DTL_ID, GIVEN_DT, COMMENTS) values
-                         	(".$sEmpId.",".$idInvDtl.",'".$dtGiven."','".$sComments."')");
-			if (!$result){
-				echo "<p class='excepmsg'>KMDB Exception: Employee Inventory record insert failed.</p>";
-				throw new Exception("KMDB Exception: Employee Inventory record insert failed.");
-			}
-			$idInvDtl = $db->insert_id;
-
-			//Update/insert Emp/Prod master
-			$result = $db->query("select ID from T_EMP_PRD_MST where EMP_ID='".$sEmpId."' and PRD_ID='".$sProdId."'");
-			
-			if (!$result) {
-				echo "<p class='excepmsg'>KMDB Exception: Inventory Query failed, please close the window & try again.</p>";
-				throw new Exception("KMDB Exception: Emp Inventory out Detail record insert failed.");
+			if (!$stmt->execute()) {
+				echo "<p class='excepmsg'>KMDB Exception: Inventory Query failed, please try again.</p>";
 			}else{
-				$row=mysqli_fetch_row($result);
-				$iGenId = $row[0];
-				if($iGenId){
-					//update existing master
-					$result = $db->query("update T_EMP_PRD_MST set QTY=QTY-".$iQty." where ID=".$iGenId);
-						
-					if (!$result){
-						echo "<p class='excepmsg'>KMDB Exception: Emp Inventory Master record update failed.</p>";
-						throw new Exception("KMDB Exception: Emp Inventory Master record update failed.");
+	
+				$stmt->store_result();
+				$rowcount = $stmt->num_rows;
+				//echo "--T_INVT rows:".$rowcount."<br>";
+				//if Inventory/WH record exist, add the quantity to it
+				if($rowcount >= 1)
+				{
+					$stmt->bind_result($colId);
+					$stmt->fetch();
+					$idInvId = $colId;
+					//echo "-- T_INVT id: ".$idInvId."<br>";
+					
+					$stmt = $db->prepare("update T_INVT set QTY = QTY+?  where ID=?)");
+					$stmt->bind_param("ii", $iQty, $idInvId);
+					
+					if (!$stmt->execute()){
+						echo "<p class='excepmsg'>KMDB Exception: Inventory Master record update failed.</p>".$stmt->error;
+						throw new Exception("KMDB Exception: Inventory Master record update failed.");
 					}
-				}else{
-					$result = $db->query("insert into T_EMP_PRD_MST (EMP_ID, PRD_ID, QTY) values
-			                         	(".$sEmpId.",".$sProdId.",'".$iQty."')");
-					if (!$result){
-						echo "<p class='excepmsg'>KMDB Exception: Emp Inventory out Detail record insert failed.</p>";
-						throw new Exception("KMDB Exception: Emp Inventory out Detail record insert failed.");
+				}//end rowcount of T_INVENTORY
+				else //if no record, create new record for it
+				{
+					//echo "T_INVT insert for the PROD_ID & WH_ID<br>";
+					$stmt = $db->prepare("insert into T_INVT (PROD_ID, WH_ID, QTY) values (?,?,?)");
+	                $stmt->bind_param("iii", $sProdId, $sWHId, $iQty);
+	                
+					if (!$stmt->execute()){
+						echo "<p class='excepmsg'>KMDB Exception: Inventory Master record insert failed.</p>".$stmt->error;
+						throw new Exception("KMDB Exception: Inventory Master record insert failed.");
 					}
+					$idInvId = $db->insert_id;
+					//echo "T_INVT inserted id: ".$idInvId."<br>";
+				}//else Inv(Prod/WH)
+				
+				//Insert Inventory detail record for this txn
+				$stmt = $db->prepare("insert into T_INVT_DTL (INVT_ID, OP_DT, QTY, OPERATION, OP_EMP_ID) values (?,?,?,?,?)");
+				$stmt->bind_param("isisi", $idInvId, $dtGiven, $iQty, $sInvOp, $sEmpId);
+					
+				if (!$stmt->execute()){
+					echo "<p class='excepmsg'>KMDB Exception: Inventory Detail record insert failed.</p>".$stmt->error;
+					throw new Exception("KMDB Exception: Inventory Detail record insert failed.");
 				}
-			}//end else Emp/Prod master
-		}//else query success
-		$db->commit();
-  		echo "<p class='successmsg'>Success! Product received:<br>*".$sProdName."/".$sEmpName."/".$sWHCode."</p>";
-  		$sId = $idInvDtl;
+				$idInvDtl = $db->insert_id;
+				//echo "T_INVT_DTL inserted id: ".$idInvDtl."<br>";
+				
+				//insert prod-emp entry
+				$stmt = $db->prepare("insert into T_PROD_FROM_EMP (EMP_ID, INVT_DTL_ID, GIVEN_DT, COMMENTS) values (?,?,?,?)");
+				$stmt->bind_param("iiss", $sEmpId, $idInvDtl, $dtGiven, $sComments);
+				if (!$stmt->execute())
+				{
+					echo "<p class='excepmsg'>KMDB Exception: Employee Inventory record insert failed.</p>".$stmt->error;
+					throw new Exception("KMDB Exception: Employee Inventory record insert failed.");
+				}
+				$idInvDtl = $db->insert_id;
+				//echo "T_PROD_FROM_EMP inserted id: ".$idInvDtl."<br>";
+				
+				//Update/insert Emp/Prod master
+				$stmt = $db->prepare("select ID from T_EMP_PRD_MST where EMP_ID=? and PRD_ID=?");
+				$stmt->bind_param("ii", $sEmpId, $sProdId);
+				if (!$stmt->execute()) 
+				{
+					echo "<p class='excepmsg'>KMDB Exception: Emp Product master table Query failed, please close the window & try again.</p>".$stmt->error;
+					throw new Exception("KMDB Exception: Emp-Product master table Detail record query failed.");
+				}else{
+					
+					$stmt->store_result();
+					$rowcount = $stmt->num_rows;
+					//echo "--T_EMP_PRD_MST [EMP_Id=".$sEmpId.", PRD_ID=".$sProdId."] rows:".$rowcount."<br>";
+					//if Emp-Prod record exist, add the quantity to it
+					if($rowcount >= 1)
+					{
+						$stmt->bind_result($colId);
+						$stmt->fetch();
+						//$iGenId = $colId;
+						//echo "---T_EMP_PRD_MST updating id:".$colId."<br>";
+						$stmt = $db->prepare("update T_EMP_PRD_MST set QTY=QTY-? where ID=?");
+						$stmt->bind_param("ii", $iQty, $colId);
+						
+						
+						if (!$stmt->execute()){
+							echo "<p class='excepmsg'>KMDB Exception: Emp Inventory Master record update failed.</p>".$stmt->error;
+							throw new Exception("KMDB Exception: Emp-Product master record update failed.");
+						}
+					}else{
+						$stmt = $db->prepare("insert into T_EMP_PRD_MST (EMP_ID, PRD_ID, QTY) values (?,?,?)");
+		                $stmt->bind_param("iii", $sEmpId, $sProdId, $iQty);
+		                //echo "---T_EMP_PRD_MST inserting..";
+		                
+						if (!$stmt->execute()){
+							echo "<p class='excepmsg'>KMDB Exception: Emp Inventory out Detail record insert failed.</p>".$stmt->error;
+							throw new Exception("KMDB Exception: Emp-Product master record insert failed.");
+						}
+					}
+				}//end else Emp/Prod master
+				$bOpSuccess =true;
+			}//else query success
+			$db->commit();
+			if($bOpSuccess)
+			{
+				$sId = $idInvDtl;
+				echo "<p class='successmsg'>Success! Product received:<br>*".$sProdName."/".$sEmpName."/".$sWHCode."</p>";
+				
+			}else 
+				echo "<p class='excepmsg'>Failed! Data insert failed:<br>*".$sProdName."/".$sEmpName."/".$sWHCode."</p>";
+			
 		}catch (Exception $e) {
 			$db->rollback();
      	    echo "<p class='excepmsg'>KMDB Exception: Record entry Exception. Please try again.</p>";

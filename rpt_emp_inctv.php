@@ -54,8 +54,8 @@
  								inner join T_EMP e on e.ID=ord.EMP_ID
  								where 1=1 ".
  									(($sEmpId) ? " and empsl.EMP_ID=".$sEmpId : "").
- 									((strlen($dtStart)>1) ? " and STR_TO_DATE(ord.ORD_DT,'%Y-%m-%d') >= STR_TO_DATE('".$dtStart."','%Y-%m-%d')" : "").
- 									((strlen($dtEnd)>1) ? " and STR_TO_DATE(ord.ORD_DT,'%Y-%m-%d') <= STR_TO_DATE('".$dtEnd."','%Y-%m-%d')" : "").
+ 									((strlen($dtStart)>8) ? " and STR_TO_DATE(ord.ORD_DT,'%Y-%m-%d') >= STR_TO_DATE('".$dtStart."','%Y-%m-%d')" : "").
+ 									((strlen($dtEnd)>8) ? " and STR_TO_DATE(ord.ORD_DT,'%Y-%m-%d') <= STR_TO_DATE('".$dtEnd."','%Y-%m-%d')" : "").
  								" group by ENAME, PNAME, INCTV".
  								" order by ENAME, PNAME, ORD_DT";
 			//echo "My Query: ".$sQuery;

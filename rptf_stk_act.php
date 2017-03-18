@@ -67,7 +67,7 @@
     	<td>Warehouse Loc:</td>
     	<td><input type="text" name="sWHCode0" id="sWHCode0" size="16" maxlength="25" value=""/>
     		<input type="text" name="sWHId0" id="sWHId0" size="5" readonly>
-    		<input type="button" value="..." onclick="JavaScript:pickWH_by_prodId(sProdId.value,'0')"></td></tr>
+    		<input type="button" value="..." onclick="JavaScript:pickWH_by_prodId(sProdId0.value,'0')"></td></tr>
  	<tr>    			
     	<td>Operation Type:</td>
     	<td><select name="sOp">

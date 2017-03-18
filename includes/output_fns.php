@@ -306,4 +306,14 @@ function do_rpt_header($title) {
   echo "<a href='JavaScript:window.print();'>Print</a><hr/>";
   
 }
+
+function km_disp_post_data($POST)
+{
+	//print all POST variables
+	//print_r($_POST);
+	echo "<table>";
+	foreach ($POST as $key => $value)
+		echo "<tr><td>".$key."</td><td>".$value."</td></tr>";
+	echo "</table>";
+}
 ?>

@@ -18,8 +18,8 @@
 
   	//initialize variables
   	//$sId = $_POST['sId'];
-  	$sEmpId = isset($_POST['sEmpId'])?$_POST['sEmpId']:"";
   	$sEmpName = isset($_POST['sEmpName'])?$_POST['sEmpName']:"";
+  	$sEmpId = ($sEmpName) ? (isset($_POST['sEmpId'])?$_POST['sEmpId']:"") : "";
   	$sPrdName = "";
   	$iQty = "";
   	$dtStart = isset($_POST['dtStart'])?$_POST['dtStart']:"";
@@ -48,7 +48,7 @@
 	//echo "Input: sEmpId=".$sEmpId.";sProdId=".$sProdId.";sGrpBy1=".$sGrpBy1.";sGrpBy2=".$sGrpBy2.";sGrpPrd=".$sGrpPrd;
   	//Add filter section
 	echo "<h3>Filter Criteria</h3>";
-	echo "<table><tr><th>Employee Name:</th><td>".(($sEmpName)?$sEmpName:"--ALL--</td></tr>").
+	echo "<table><tr><th>Employee Name:</th><td>".(($sEmpName && $sEmpId)?$sEmpName:"--ALL--</td></tr>").
 		"<tr><th>Date Range:</th><td>From:".(($dtStart)?$dtStart:"--System Launch--")."<br>To:".(($dtEnd)?$dtEnd:date("Y-m-d H:i:s"))."</td></tr>".
 		"</table><hr>";
 
@@ -80,9 +80,9 @@
  								inner join T_PRODUCTS p on p.ID=ol.PROD_ID
  								inner join T_EMP e on e.ID=ord.EMP_ID
  								where 1=1 ".
- 									(($sEmpId) ? " and empsl.EMP_ID=".$sEmpId : "").
- 									((strlen($dtStart)>1) ? " and STR_TO_DATE(ord.ORD_DT,'%Y-%m-%d') >= STR_TO_DATE('".$dtStart."','%Y-%m-%d')" : "").
- 									((strlen($dtEnd)>1) ? " and STR_TO_DATE(ord.ORD_DT,'%Y-%m-%d') <= STR_TO_DATE('".$dtEnd."','%Y-%m-%d')" : "").
+ 									(($sEmpId && $sEmpName) ? " and empsl.EMP_ID=".$sEmpId : "").
+ 									((strlen($dtStart)>9) ? " and STR_TO_DATE(ord.ORD_DT,'%Y-%m-%d') >= STR_TO_DATE('".$dtStart."','%Y-%m-%d')" : "").
+ 									((strlen($dtEnd)>9) ? " and STR_TO_DATE(ord.ORD_DT,'%Y-%m-%d') <= STR_TO_DATE('".$dtEnd."','%Y-%m-%d')" : "").
  								" group by ENAME, PNAME, DATE(ord.ORD_DT)".
  								" order by ENAME, DATE(ord.ORD_DT) asc";
 			//echo "My SQL: ".$sQuery;

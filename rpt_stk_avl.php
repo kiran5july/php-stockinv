@@ -17,10 +17,10 @@
 
   	//initialize variables
   	//$sId = $_POST['sId'];
-  	$sProdId = isset($_POST['sProdId0'])?$_POST['sProdId0']:"";
-  	$sProdName = isset($_POST['sProdName0'])?$_POST['sProdName0']:"";
+   	$sProdName = isset($_POST['sProdName0'])?$_POST['sProdName0']:"";
+   	$sProdId = ($sProdName) ? (isset($_POST['sProdId0'])?$_POST['sProdId0']:"") : "";
   	$sWHCode = isset($_POST['sWHCode0'])?$_POST['sWHCode0']:"";
-  	$sWHId = isset($_POST['sWHId0'])?$_POST['sWHId0']:"";
+  	$sWHId = ($sWHCode) ? (isset($_POST['sWHId0'])?$_POST['sWHId0']:"") : "";
   	//$dtStart = isset($_POST['dtStart'])?$_POST['dtStart']:"";
   	//$dtEnd = isset($_POST['dtEnd'])?$_POST['dtEnd']:"";
   	$sGrpBy = $_POST['sGrpBy'];
@@ -64,8 +64,8 @@
  								inner join T_PRODUCTS p on p.ID=invt.PROD_ID
 								left outer join T_WAREHOUSE wh on wh.ID=invt.WH_ID
  								where 1=1 ".
-			 								((strlen($sProdId)>1) ? " and invt.PROD_ID=".$sProdId : "").
-			 								(($sWHId) ? " and invt.WH_ID=".$sWHId : "").
+			 								((strlen($sProdId)>0) ? " and invt.PROD_ID=".$sProdId : "").
+			 								((strlen($sWHId)>0) ? " and invt.WH_ID=".$sWHId : "").
 			 								" and invt.QTY>0".
 			 								" order by ". $sGrpByCols."";
 			//echo "My Query: ".$sQuery;

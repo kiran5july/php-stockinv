@@ -15,12 +15,14 @@
   	echo "Your session timed out. Please <a href=\"login.php\" target=\"main\">click here to login</a> again.";
   }else{
 
+  	//km_disp_post_data($_POST);
+  	
   	//initialize variables
   	//$sId = $_POST['sId'];
-  	$sProdId = isset($_POST['sProdId0'])?$_POST['sProdId0']:"";
   	$sProdName = isset($_POST['sProdName0'])?$_POST['sProdName0']:"";
-  	$sEmpId = isset($_POST['sEmpId'])?$_POST['sEmpId']:"";
+  	$sProdId = ($sProdName) ? (isset($_POST['sProdId0'])?$_POST['sProdId0']:"") : "";
   	$sEmpName = isset($_POST['sEmpName'])?$_POST['sEmpName']:"";
+  	$sEmpId = ($sEmpName) ? (isset($_POST['sEmpId'])?$_POST['sEmpId']:"") : "";
   	//$dtStart = isset($_POST['dtStart'])?$_POST['dtStart']:"";
   	//$dtEnd = isset($_POST['dtEnd'])?$_POST['dtEnd']:"";
   	$sGrpBy = $_POST['sGrpBy'];
@@ -64,8 +66,8 @@
  								inner join T_PRODUCTS p on p.ID=emppr.PRD_ID
 								inner join T_EMP e on e.ID=emppr.EMP_ID
  								where 1=1 ".
-			 								((strlen($sProdId)>1) ? " and emppr.PRD_ID=".$sProdId : "").
-			 								(($sEmpId) ? " and emppr.EMP_ID=".$sEmpId : "").
+			 								((strlen($sProdId)>0 && $sProdName) ? " and emppr.PRD_ID=".$sProdId : "").
+			 								(($sEmpId && $sEmpName) ? " and emppr.EMP_ID=".$sEmpId : "").
 			 								" and emppr.QTY >0".
 			 								" order by ". $sGrpByCols."";
 			//echo "My Query: ".$sQuery;
